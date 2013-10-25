@@ -346,7 +346,7 @@ final class SObjects {
         Node fieldsToNullOrId = sObjChildNodes.item(1);
         Element idElt = checkNodeIsElement(fieldsToNullOrId, "Id");
 
-        PartnerSObject sObj;
+        PartnerSObjectImpl sObj;
         if ("true".equals(idElt.getAttribute("xsi:nil"))) {
             // id is null
             sObj = PartnerSObjectImpl.getNew(sObjTypeStr);
@@ -357,10 +357,17 @@ final class SObjects {
 
         for (int i = 2; i < sObjChildNodes.getLength(); i++) {
             Node fieldNode = sObjChildNodes.item(i);
-
             String fieldName = fieldNode.getLocalName();
-            String fieldValue = extractFieldValue(fieldNode);
-            sObj.setField(fieldName, fieldValue);
+        	String xsiType = ((Element) fieldNode).getAttribute("xsi:type");        	
+        	
+            if ("sf:sObject".equals(xsiType)) {
+            	PartnerSObject subObj = parseSObject(fieldNode, fieldName);
+            	sObj.setRelationshipSubObject(fieldName, subObj);
+            }
+            else {
+            	String fieldValue = extractFieldValue(fieldNode);
+            	sObj.setField(fieldName, fieldValue);
+            }
         }
 
         return sObj;
